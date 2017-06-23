@@ -3,21 +3,20 @@
 import sys
 
 ADDRESS_OF_ENTRY_POINT = 38
-TWO_BYTES = 2
+WORD = 4
 
 # Converts bytes object to string, includes preceding zeroes
+# TODO: Iterate through byte object, building string
 def byte_to_address(byte):
-    #Split bytes object in half
-    msb = hex(byte[1])
-    lsb = hex(byte[0])
+    address = ""
+    for b in byte:
+        temp = str(hex(b))[2:]
+        if len(temp) == 1:
+            temp = "0" + temp
+        address = temp + address
 
-    #Check if preceeding zeroes need to be added
-    if (len(msb) == 3):
-        msb = msb[0:2] + "0" + msb[2:]
-    if (len(lsb) == 3):
-        lsb = lsb[0:2] + "0" + lsb[2:]
+    return "0x" + str(address)
 
-    return str(msb)+str(lsb)[2:]
 
 # Iterates through a Windows executable and returns 
 def iterate_binary(file_name):
@@ -26,15 +25,15 @@ def iterate_binary(file_name):
     entry_point = 0
     
     try:
-        byte = f.read(TWO_BYTES)
+        byte = f.read(WORD)
         # Look for address of IMAGE_OPTIONAL_HEADER struct
         while byte != "":
             if hex(byte[0]) == "0x50" and hex(byte[1]) == "0x45":
                 # AddressOfEntryPoint is +28h (40d) but Windows is
                 # little endian so we go 2 bytes before 
-                print("Found \"PE\" at " + (hex((f.tell()) - TWO_BYTES)) + ", seeking file to entry point...")
+                print("Found \"PE\" at " + (hex((f.tell()) - WORD)) + ", seeking file to entry point...")
                 f.seek(f.tell() + ADDRESS_OF_ENTRY_POINT)
-                entry_point = f.read(TWO_BYTES)
+                entry_point = f.read(WORD)
                 break
             
             byte = f.read(2)
